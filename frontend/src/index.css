@@ -1,0 +1,574 @@
+@import "tailwindcss";
+
+/* ------------------------------
+   OXN GLOBAL THEME
+------------------------------ */
+
+:root {
+  --bg-primary: #061522;
+  --bg-secondary: #0B1B2A;
+  --bg-card: #10283A;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+
+  --brand-red: #FF6A00;
+  --brand-orange: #ff6a00;
+
+  --border-color: rgba(255,255,255,0.08);
+
+  --font-primary: "Inter", sans-serif;
+}
+
+
+/* ------------------------------
+   HTML
+------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg-primary);
+}
+
+
+/* ------------------------------
+   BODY
+------------------------------ */
+
+body {
+
+  margin: 0;
+  padding: 0;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(255,106,0,0.12),
+      transparent 35%
+    ),
+    var(--bg-primary);
+
+  color: var(--text-primary);
+
+  font-family: var(--font-primary);
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ------------------------------
+   RESET
+------------------------------ */
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* ------------------------------
+   LINKS
+------------------------------ */
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+/* ------------------------------
+   IMAGE
+------------------------------ */
+
+img {
+  display:block;
+  max-width:100%;
+}
+
+
+/* ------------------------------
+   BUTTON
+------------------------------ */
+
+button {
+
+  font-family: inherit;
+
+  cursor:pointer;
+
+  border:none;
+
+  outline:none;
+
+}
+
+
+/* ------------------------------
+   TEXT SELECTION
+------------------------------ */
+
+::selection {
+
+  background: var(--brand-red);
+
+  color:white;
+
+}
+
+
+/* ------------------------------
+   SCROLLBAR
+------------------------------ */
+
+::-webkit-scrollbar {
+
+  width:8px;
+
+}
+
+
+::-webkit-scrollbar-track {
+
+  background:#061522;
+
+}
+
+
+::-webkit-scrollbar-thumb {
+
+  background:var(--brand-red);
+
+  border-radius:20px;
+
+}
+
+
+/* ------------------------------
+   GLOBAL CONTAINER
+------------------------------ */
+
+.container {
+
+  width:100%;
+
+  max-width:1280px;
+
+  margin:auto;
+
+  padding-left:20px;
+
+  padding-right:20px;
+
+}
+/* ==========================================================
+   PREMIUM PRODUCT BACKGROUND SYSTEM
+========================================================== */
+
+.product-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-bg canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+
+/* ==========================================================
+   PRODUCT SECTION
+========================================================== */
+
+#arsenal {
+  position: relative;
+  isolation: isolate;
+}
+
+#arsenal > * {
+  position: relative;
+  z-index: 2;
+}
+
+
+/* ==========================================================
+   FLOATING LIGHTS
+========================================================== */
+
+.light-orb {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: .08;
+  animation: orbFloat 18s ease-in-out infinite;
+}
+
+.light-orb.one{
+  background:#1976C5;
+  left:-150px;
+  top:0;
+}
+
+.light-orb.two{
+  background:#ffffff;
+  right:-180px;
+  bottom:0;
+  animation-delay:-8s;
+}
+
+@keyframes orbFloat{
+
+0%,100%{
+transform:translateY(0px);
+}
+
+50%{
+transform:translateY(-80px);
+}
+
+}
+
+
+/* ==========================================================
+   METALLIC PARTICLES
+========================================================== */
+
+.metal-particle{
+
+position:absolute;
+
+width:2px;
+height:2px;
+
+border-radius:50%;
+
+background:rgba(255,255,255,.45);
+
+animation:particleFloat linear infinite;
+
+}
+
+@keyframes particleFloat{
+
+0%{
+transform:translateY(0px) scale(1);
+opacity:0;
+}
+
+10%{
+opacity:1;
+}
+
+90%{
+opacity:1;
+}
+
+100%{
+transform:translateY(-900px) scale(0);
+opacity:0;
+}
+
+}
+
+
+/* ==========================================================
+   PRODUCT CARD PREMIUM
+========================================================== */
+
+.product-card{
+
+transform-style:preserve-3d;
+
+transition:
+transform .45s cubic-bezier(.16,1,.3,1),
+box-shadow .45s,
+border-color .45s;
+
+will-change:transform;
+
+}
+
+.product-card:hover{
+
+box-shadow:
+0 20px 60px rgba(0,0,0,.45),
+0 0 40px rgba(25,118,197,.18);
+
+}
+
+
+/* ==========================================================
+   CURSOR GLOW
+========================================================== */
+
+.product-card::before{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background:
+
+radial-gradient(
+
+600px circle at var(--mx,50%) var(--my,50%),
+
+rgba(25,118,197,.18),
+
+transparent 55%
+
+);
+
+opacity:0;
+
+transition:opacity .35s;
+
+pointer-events:none;
+
+}
+
+.product-card:hover::before{
+
+opacity:1;
+
+}
+
+
+/* ==========================================================
+   SHIMMER
+========================================================== */
+
+.product-card::after{
+
+content:"";
+
+position:absolute;
+
+top:-150%;
+
+left:-60%;
+
+width:40%;
+
+height:400%;
+
+transform:rotate(25deg);
+
+background:
+
+linear-gradient(
+
+90deg,
+
+transparent,
+
+rgba(255,255,255,.12),
+
+transparent
+
+);
+
+transition:.8s;
+
+pointer-events:none;
+
+}
+
+.product-card:hover::after{
+
+left:150%;
+
+}
+
+
+/* ==========================================================
+   BUTTON SHIMMER
+========================================================== */
+
+.shimmer-btn{
+
+position:relative;
+
+overflow:hidden;
+
+}
+
+.shimmer-btn::after{
+
+content:"";
+
+position:absolute;
+
+top:-120%;
+
+left:-40%;
+
+width:35%;
+
+height:320%;
+
+transform:rotate(20deg);
+
+background:
+
+linear-gradient(
+
+90deg,
+
+transparent,
+
+rgba(255,255,255,.45),
+
+transparent
+
+);
+
+transition:.8s;
+
+}
+
+.shimmer-btn:hover::after{
+
+left:140%;
+
+}
+
+
+/* ==========================================================
+   REVEAL
+========================================================== */
+/* ==========================================================
+   SCROLL REVEAL
+========================================================== */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(50px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s cubic-bezier(.16,1,.3,1);
+  will-change: opacity, transform;
+}
+
+[data-reveal].active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional delay classes */
+[data-delay="100"] { transition-delay: 20ms; }
+[data-delay="150"] { transition-delay: 40ms; }
+[data-delay="200"] { transition-delay: 60ms; }
+[data-delay="250"] { transition-delay: 80ms; }
+[data-delay="300"] { transition-delay: 100ms; }
+[data-delay="350"] { transition-delay: 120ms; }
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media(max-width:768px){
+
+.product-bg{
+
+display:none;
+
+}
+
+.product-card{
+
+transform:none!important;
+
+}
+
+}
+/* ==========================================================
+   OXN PREMIUM VISUAL LAYER
+   Keeps the original motion/component architecture while
+   translating the visual system to OXN's blue / orange identity.
+========================================================== */
+
+:root {
+  --oxn-blue: #1976C5;
+  --oxn-blue-bright: #2D8BDE;
+  --oxn-orange: #FF6A00;
+  --oxn-navy: #061522;
+  --oxn-panel: #0B1B2A;
+  --oxn-line: rgba(25, 118, 197, 0.22);
+}
+
+body {
+  background:
+    radial-gradient(circle at 78% 8%, rgba(25,118,197,.13), transparent 28%),
+    radial-gradient(circle at 12% 72%, rgba(255,106,0,.055), transparent 24%),
+    var(--oxn-navy);
+}
+
+::selection {
+  background: var(--oxn-blue);
+  color: #fff;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--oxn-navy);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--oxn-blue), var(--oxn-orange));
+}
+
+/* Fine technical paper / label texture */
+.oxn-surface {
+  background-image:
+    linear-gradient(rgba(25,118,197,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(25,118,197,.045) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,.055) 1px, transparent 1.5px);
+  background-size: 52px 52px, 52px 52px, 18px 18px;
+}
+
+/* Premium glass treatment */
+.oxn-glass {
+  background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.025));
+  border: 1px solid rgba(255,255,255,.11);
+  box-shadow: 0 24px 80px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter: blur(18px);
+}
+
+/* Brand blue/orange animated edge */
+.oxn-accent-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.oxn-accent-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--oxn-blue), var(--oxn-orange), transparent);
+  transform-origin: left;
+  transition: width .55s cubic-bezier(.16,1,.3,1);
+}
+
+.oxn-accent-line:hover::after {
+  width: 92%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
