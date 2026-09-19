@@ -1,11 +1,8 @@
 package OXNsupplements.config;
 
-
 import OXNsupplements.entity.Product;
 import OXNsupplements.repository.ProductRepository;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,323 +10,204 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 @Slf4j
 public class DataSeeder {
 
+    private static final List<OxnProductSeed> OXN_PRODUCTS = List.of(
+            new OxnProductSeed(
+                    "Birthday Cake",
+                    "OXN Whey Protein in Birthday Cake flavour. The supplied OXN label identifies this as a 4.5 KG whey protein product with 24g protein per serving."
+            ),
+            new OxnProductSeed(
+                    "Cookies & Cream",
+                    "OXN Whey Protein in Cookies & Cream flavour. The supplied OXN product artwork is used for this product."
+            ),
+            new OxnProductSeed(
+                    "Chocolate Hazelnut",
+                    "OXN Whey Protein in Chocolate Hazelnut flavour. The supplied OXN product artwork is used for this product."
+            ),
+            new OxnProductSeed(
+                    "Double Rich Chocolate",
+                    "OXN Whey Protein in Double Rich Chocolate flavour. The supplied OXN label identifies this as a 4.5 KG whey protein product with 24g protein per serving."
+            ),
+            new OxnProductSeed(
+                    "Strawberry Cheesecake",
+                    "OXN Whey Protein in Strawberry Cheesecake flavour. The supplied OXN product artwork is used for this product."
+            )
+    );
+
     @Bean
     CommandLineRunner seedProducts(
-            ProductRepository repo,
+            ProductRepository productRepository,
             JdbcTemplate jdbcTemplate
     ) {
-
         return args -> {
 
             /*
              * ============================================================
-             * KEEP EXISTING PRODUCTS
+             * OXN PRODUCT CATALOGUE MIGRATION
              * ============================================================
              *
-             * This project may already contain the original products.
-             * We therefore DO NOT stop the flavour/product setup just
-             * because the products table is non-empty.
+             * Each OXN flavour is an independent Product row.
              *
-             * We seed/update the three Iron Mass parent products that
-             * the current frontend uses.
-             */
-
-            ensureParentProduct(
-                    repo,
-                    "Bulk Mass Gainer",
-                    "4200",
-                    "High-performance mass gainer available in three delicious flavours.",
-                    "Mass Gainer",
-                    "NEW"
-            );
-
-            ensureParentProduct(
-                    repo,
-                    "Nitro Surge Pre-Workout",
-                    "1899",
-                    "High-performance pre-workout available in two powerful flavours.",
-                    "Pre-Workout",
-                    "NEW"
-            );
-
-            ensureParentProduct(
-                    repo,
-                    "Mech-Warrior",
-                    "2199",
-                    "Cybernetic stimulation formula available in two flavours.",
-                    "Pre-Workout",
-                    "NEW"
-            );
-
-
-            /*
-             * ============================================================
-             * PRODUCT FLAVOUR TABLE
-             * ============================================================
-             */
-
-            createProductFlavourTable(
-                    jdbcTemplate
-            );
-
-
-            /*
-             * ============================================================
-             * CART VARIANT COLUMN
-             * ============================================================
+             * Required products:
              *
-             * The existing cart tables were created before flavour
-             * support was introduced. Add the nullable flavour_id column
-             * only when it is missing.
+             * 1. Birthday Cake
+             * 2. Cookies & Cream
+             * 3. Chocolate Hazelnut
+             * 4. Double Rich Chocolate
+             * 5. Strawberry Cheesecake
+             *
+             * All products have a selling price of ₹16,999.
+             * ============================================================
              */
 
-            ensureCartItemFlavourColumn(
-                    jdbcTemplate
+            createProductFlavourTable(jdbcTemplate);
+
+            List<Product> existingProducts =
+                    productRepository.findAll();
+
+            Set<String> existingNames =
+                    existingProducts.stream()
+                            .map(Product::getName)
+                            .filter(name -> name != null)
+                            .map(String::trim)
+                            .map(String::toLowerCase)
+                            .collect(Collectors.toSet());
+
+            Set<String> requiredNames =
+                    OXN_PRODUCTS.stream()
+                            .map(OxnProductSeed::name)
+                            .map(String::trim)
+                            .map(String::toLowerCase)
+                            .collect(Collectors.toSet());
+
+            boolean alreadyMigrated =
+                    existingProducts.size() == OXN_PRODUCTS.size()
+                            && existingNames.equals(requiredNames);
+
+            /*
+             * IMPORTANT:
+             *
+             * If the five products already exist, we still update their
+             * prices to ₹16,999.
+             *
+             * This is necessary because the old version of the seeder
+             * created them with price = 0.
+             */
+            if (alreadyMigrated) {
+
+                log.info(
+                        "OXN catalogue already contains the five required products. Updating prices to ₹16,999."
+                );
+
+                for (Product product : existingProducts) {
+
+                    product.setPrice(
+                            BigDecimal.valueOf(16999)
+                    );
+
+                    productRepository.save(product);
+
+                    log.info(
+                            "Updated OXN product price: id={}, name={}, price={}",
+                            product.getId(),
+                            product.getName(),
+                            product.getPrice()
+                    );
+                }
+
+                log.info(
+                        "All five OXN product prices are now set to ₹16,999."
+                );
+
+                return;
+            }
+
+            log.info(
+                    "Existing catalogue does not match the five-product OXN catalogue. Performing product reset."
             );
 
+            /*
+             * Active carts reference products through a foreign key,
+             * so clear cart rows before deleting old products.
+             *
+             * Historical order_items are intentionally preserved.
+             */
+            jdbcTemplate.update("DELETE FROM cart_items");
+
+            jdbcTemplate.update("DELETE FROM product_flavours");
+
+            productRepository.deleteAllInBatch();
 
             /*
-             * ============================================================
-             * GET CURRENT IRON MASS PARENT IDS
-             * ============================================================
+             * Reset product IDs.
              */
+            try {
 
-            Long bulkMassGainerId =
-                    getProductId(
-                            jdbcTemplate,
-                            "Bulk Mass Gainer"
-                    );
-
-            Long nitroSurgeId =
-                    getProductId(
-                            jdbcTemplate,
-                            "Nitro Surge Pre-Workout"
-                    );
-
-            Long mechWarriorId =
-                    getProductId(
-                            jdbcTemplate,
-                            "Mech-Warrior"
-                    );
-
-
-            /*
-             * ============================================================
-             * BULK MASS GAINER FLAVOURS
-             * ============================================================
-             */
-
-            if (bulkMassGainerId != null) {
-
-                seedFlavour(
-                        jdbcTemplate,
-                        bulkMassGainerId,
-                        "Malai Kulfi",
-                        "Mass Gainer in Malai Kulfi flavour. High-calorie lean mass gainer designed for maximum muscle size and strength.",
-                        "4200",
-                        "3 KG"
+                jdbcTemplate.execute(
+                        "ALTER TABLE products AUTO_INCREMENT = 1"
                 );
 
-                seedFlavour(
-                        jdbcTemplate,
-                        bulkMassGainerId,
-                        "Double Chocolate",
-                        "Mass Gainer in Double Chocolate flavour. High-calorie lean mass gainer designed for maximum muscle size and strength.",
-                        "4200",
-                        "3 KG"
-                );
+            } catch (Exception exception) {
 
-                seedFlavour(
-                        jdbcTemplate,
-                        bulkMassGainerId,
-                        "Cookies & Cream",
-                        "Mass Gainer in Cookies & Cream flavour. High-calorie lean mass gainer designed for maximum muscle size and strength.",
-                        "4200",
-                        "3 KG"
+                log.warn(
+                        "Could not reset products AUTO_INCREMENT. New OXN IDs will still work normally.",
+                        exception
                 );
-
             }
 
-
             /*
-             * ============================================================
-             * NITRO SURGE FLAVOURS
-             * ============================================================
+             * Create the five OXN products.
              */
+            for (OxnProductSeed seed : OXN_PRODUCTS) {
 
-            if (nitroSurgeId != null) {
+                Product product = Product.builder()
+                        .name(seed.name())
 
-                seedFlavour(
-                        jdbcTemplate,
-                        nitroSurgeId,
-                        "Pina Colada",
-                        "Nitro Surge Pre-Workout in Pina Colada flavour. High-performance pre-workout designed to support energy, focus, training intensity and performance.",
-                        "1899",
-                        "180 GM"
+                        /*
+                         * OXN selling price
+                         */
+                        .price(BigDecimal.valueOf(16999))
+
+                        .description(seed.description())
+                        .category("Whey Protein")
+                        .badge("OXN WHEY")
+                        .featured(true)
+                        .inStock(true)
+                        .build();
+
+                Product saved =
+                        productRepository.save(product);
+
+                log.info(
+                        "Seeded OXN product: id={}, name={}, price={}",
+                        saved.getId(),
+                        saved.getName(),
+                        saved.getPrice()
                 );
-
-                seedFlavour(
-                        jdbcTemplate,
-                        nitroSurgeId,
-                        "Candy Orange",
-                        "Nitro Surge Pre-Workout in Candy Orange flavour. High-performance pre-workout designed to support energy, focus, training intensity and performance.",
-                        "1899",
-                        "180 GM"
-                );
-
             }
 
-
-            /*
-             * ============================================================
-             * MECH-WARRIOR FLAVOURS
-             * ============================================================
-             */
-
-            if (mechWarriorId != null) {
-
-                seedFlavour(
-                        jdbcTemplate,
-                        mechWarriorId,
-                        "Pina Colada",
-                        "Mech-Warrior in Pina Colada flavour. Cybernetic stimulation pre-workout formula designed to support intense training performance.",
-                        "2199",
-                        "300 GM"
-                );
-
-                seedFlavour(
-                        jdbcTemplate,
-                        mechWarriorId,
-                        "Candy Orange",
-                        "Mech-Warrior in Candy Orange flavour. Cybernetic stimulation pre-workout formula designed to support intense training performance.",
-                        "2199",
-                        "300 GM"
-                );
-
-            }
-
+            log.info(
+                    "OXN catalogue reset complete. Exactly {} products are now configured with price ₹16,999.",
+                    OXN_PRODUCTS.size()
+            );
         };
     }
 
-
     /*
-     * ================================================================
-     * ENSURE PARENT PRODUCT
-     * ================================================================
+     * Keep the legacy table available so an existing database upgrade
+     * does not fail because the table is missing.
      *
-     * Existing product:
-     *     update the Iron Mass parent fields.
-     *
-     * Missing product:
-     *     create it.
-     */
-    private void ensureParentProduct(
-            ProductRepository repo,
-            String name,
-            String price,
-            String description,
-            String category,
-            String badge
-    ) {
-
-        List<Product> products =
-                repo.findAll();
-
-        Product product =
-                products.stream()
-                        .filter(
-                                item ->
-                                        name.equals(
-                                                item.getName()
-                                        )
-                        )
-                        .findFirst()
-                        .orElse(null);
-
-
-        if (product == null) {
-
-            product =
-                    Product.builder()
-                            .name(name)
-                            .price(
-                                    new BigDecimal(price)
-                            )
-                            .description(
-                                    description
-                            )
-                            .category(
-                                    category
-                            )
-                            .badge(
-                                    badge
-                            )
-                            .featured(true)
-                            .inStock(true)
-                            .build();
-
-            Product saved =
-                    repo.save(product);
-
-            log.info(
-                    "Seeded Iron Mass parent product: id={}, name={}",
-                    saved.getId(),
-                    saved.getName()
-            );
-
-            return;
-        }
-
-
-        /*
-         * Update only the parent product information that belongs
-         * to the Iron Mass catalogue.
-         */
-        product.setPrice(
-                new BigDecimal(price)
-        );
-
-        product.setDescription(
-                description
-        );
-
-        product.setCategory(
-                category
-        );
-
-        product.setBadge(
-                badge
-        );
-
-        product.setFeatured(true);
-
-        product.setInStock(true);
-
-        repo.save(product);
-
-        log.info(
-                "Updated Iron Mass parent product: id={}, name={}",
-                product.getId(),
-                product.getName()
-        );
-
-    }
-
-
-    /*
-     * ================================================================
-     * CREATE PRODUCT FLAVOUR TABLE
-     * ================================================================
+     * The new OXN storefront does not use flavour rows.
      */
     private void createProductFlavourTable(
             JdbcTemplate jdbcTemplate
     ) {
-
         jdbcTemplate.execute(
                 """
                 CREATE TABLE IF NOT EXISTS product_flavours (
@@ -349,169 +227,11 @@ public class DataSeeder {
                 )
                 """
         );
-
     }
 
-
-    /*
-     * ================================================================
-     * ENSURE CART FLAVOUR COLUMN
-     * ================================================================
-     */
-    private void ensureCartItemFlavourColumn(
-            JdbcTemplate jdbcTemplate
+    private record OxnProductSeed(
+            String name,
+            String description
     ) {
-
-        Integer count =
-                jdbcTemplate.queryForObject(
-                        """
-                        SELECT COUNT(*)
-                        FROM information_schema.columns
-                        WHERE table_schema = DATABASE()
-                          AND table_name = 'cart_items'
-                          AND column_name = 'flavour_id'
-                        """,
-                        Integer.class
-                );
-
-
-        if (count != null && count > 0) {
-            return;
-        }
-
-
-        jdbcTemplate.execute(
-                """
-                ALTER TABLE cart_items
-                ADD COLUMN flavour_id BIGINT NULL
-                """
-        );
-
-        log.info(
-                "Added flavour_id column to cart_items."
-        );
-
     }
-
-
-    /*
-     * ================================================================
-     * FIND PRODUCT ID
-     * ================================================================
-     */
-    private Long getProductId(
-            JdbcTemplate jdbcTemplate,
-            String productName
-    ) {
-
-        List<Long> ids =
-                jdbcTemplate.query(
-                        """
-                        SELECT id
-                        FROM products
-                        WHERE name = ?
-                        LIMIT 1
-                        """,
-                        (
-                                rs,
-                                rowNum
-                        ) ->
-                                rs.getLong(
-                                        "id"
-                                ),
-                        productName
-                );
-
-        if (ids.isEmpty()) {
-            return null;
-        }
-
-        return ids.get(0);
-
-    }
-
-
-    /*
-     * ================================================================
-     * SEED / UPDATE FLAVOUR
-     * ================================================================
-     */
-    private void seedFlavour(
-            JdbcTemplate jdbcTemplate,
-            Long productId,
-            String flavourName,
-            String description,
-            String price,
-            String weight
-    ) {
-
-        Integer count =
-                jdbcTemplate.queryForObject(
-                        """
-                        SELECT COUNT(*)
-                        FROM product_flavours
-                        WHERE product_id = ?
-                          AND flavour_name = ?
-                          AND weight = ?
-                        """,
-                        Integer.class,
-                        productId,
-                        flavourName,
-                        weight
-                );
-
-
-        if (count != null && count > 0) {
-
-            jdbcTemplate.update(
-                    """
-                    UPDATE product_flavours
-                    SET
-                        description = ?,
-                        in_stock = TRUE,
-                        price = ?
-                    WHERE product_id = ?
-                      AND flavour_name = ?
-                      AND weight = ?
-                    """,
-                    description,
-                    new BigDecimal(price),
-                    productId,
-                    flavourName,
-                    weight
-            );
-
-            return;
-        }
-
-
-        jdbcTemplate.update(
-                """
-                INSERT INTO product_flavours
-                (
-                    flavour_name,
-                    description,
-                    in_stock,
-                    price,
-                    product_id,
-                    weight
-                )
-                VALUES (?, ?, TRUE, ?, ?, ?)
-                """,
-                flavourName,
-                description,
-                new BigDecimal(price),
-                productId,
-                weight
-        );
-
-        log.info(
-                "Seeded Iron Mass flavour: productId={}, flavour={}, weight={}",
-                productId,
-                flavourName,
-                weight
-        );
-
-    }
-
 }

@@ -88,13 +88,13 @@ export default function About() {
 
               <img
 
-                src="/products/oxn/chocolate-hazelnut.png"
+                src="/OXN2.png"
 
                 alt="OXN Athlete"
 
                 className="
                 w-full
-                h-[650px]
+                h-[850px]
                 object-cover
                 transition duration-300
                 hover:scale-105
@@ -112,53 +112,6 @@ export default function About() {
                 to-transparent
                 "
               />
-
-
-            </div>
-
-
-
-            {/* Experience Badge */}
-
-
-            <div
-              className="
-              absolute
-              -bottom-10
-              -right-6
-              bg-[#10283A]
-              border
-              border-[#1976C5]
-              rounded-2xl
-              px-8
-              py-6
-              shadow-[0_0_40px_rgba(25,118,197,0.25)]
-              hidden lg:block
-              "
-            >
-
-              <h3
-                className="
-                text-5xl
-                font-black
-                text-[#1976C5]
-                "
-              >
-                10+
-              </h3>
-
-
-              <p
-                className="
-                text-white
-                uppercase
-                tracking-[0.25em]
-                text-xs
-                mt-2
-                "
-              >
-                Years Of Excellence
-              </p>
 
 
             </div>

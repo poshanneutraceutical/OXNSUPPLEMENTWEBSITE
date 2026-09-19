@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ShieldCheck,
   Zap,
-  Star,
   Award,
 } from "lucide-react";
 
@@ -395,7 +394,7 @@ export default function Hero() {
             {/* ========================= */}
 
             <motion.img
-              src="/products/oxn/double-rich-chocolate.png"
+              src="/OXNHERO.png"
               alt="OXN Athlete"
               custom={0.3}
               variants={fadeRight}
@@ -427,152 +426,6 @@ export default function Hero() {
                 lg:p-6
               "
             />
-
-            {/* ========================= */}
-            {/* Floating Card - Premium */}
-            {/* ========================= */}
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                x: -50,
-              }}
-              whileInView={{
-                opacity: 1,
-                x: 0,
-              }}
-              transition={{
-                delay: 0.7,
-                duration: 0.8,
-              }}
-              className="
-                absolute
-                left-0
-                sm:left-2
-                lg:left-0
-                top-8
-                sm:top-16
-                lg:top-28
-                rounded-2xl
-                lg:rounded-3xl
-                border
-                border-[#1976C5]/20
-                bg-[#10283A]/80
-                backdrop-blur-xl
-                p-3
-                sm:p-4
-                lg:p-6
-                shadow-2xl
-                z-20
-              "
-            >
-              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-                <div
-                  className="
-                    w-10
-                    h-10
-                    sm:w-12
-                    sm:h-12
-                    lg:w-14
-                    lg:h-14
-                    rounded-xl
-                    lg:rounded-2xl
-                    bg-[#1976C5]
-                    flex
-                    items-center
-                    justify-center
-                  "
-                >
-                  <Award
-                    className="text-black"
-                    size={20}
-                  />
-                </div>
-
-                <div>
-                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg">
-                    Premium Formula
-                  </h3>
-
-                  <p className="text-[10px] sm:text-xs lg:text-sm text-gray-400">
-                    Scientifically Engineered
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* ========================= */}
-            {/* Floating Card - Trusted */}
-            {/* ========================= */}
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                x: 50,
-              }}
-              whileInView={{
-                opacity: 1,
-                x: 0,
-              }}
-              transition={{
-                delay: 0.9,
-                duration: 0.8,
-              }}
-              className="
-                absolute
-                right-0
-                sm:right-2
-                lg:right-0
-                bottom-8
-                sm:bottom-12
-                lg:bottom-24
-                rounded-2xl
-                lg:rounded-3xl
-                border
-                border-[#1976C5]/20
-                bg-[#10283A]/80
-                backdrop-blur-xl
-                p-3
-                sm:p-4
-                lg:p-6
-                shadow-2xl
-                z-20
-              "
-            >
-              <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-                <div
-                  className="
-                    w-10
-                    h-10
-                    sm:w-12
-                    sm:h-12
-                    lg:w-14
-                    lg:h-14
-                    rounded-xl
-                    lg:rounded-2xl
-                    bg-[#1976C5]
-                    flex
-                    items-center
-                    justify-center
-                  "
-                >
-                  <Star
-                    className="text-black"
-                    size={20}
-                  />
-                </div>
-
-                <div>
-                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg">
-                    Trusted Brand
-                  </h3>
-
-                  <p className="text-[10px] sm:text-xs lg:text-sm text-gray-400">
-                    Athletes Across India
-                  </p>
-                </div>
-              </div>
-            </motion.div>
           </motion.div>
         </div>
 

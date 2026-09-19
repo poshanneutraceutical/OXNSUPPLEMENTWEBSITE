@@ -167,7 +167,7 @@ export default function Footer() {
 
                                          <span className="text-gray-400">
 
-                                           support@oxnsupplements.com
+                                           oxnsupplements@gmail.com
 
                                          </span>
 
@@ -182,7 +182,7 @@ export default function Footer() {
 
                                          <span className="text-gray-400">
 
-                                           +91 00000 00000
+                                           +91 8072081720
 
                                          </span>
 
@@ -197,9 +197,9 @@ export default function Footer() {
 
                                          <span className="text-gray-400 leading-7">
 
-                                           NEHRU NAGAR MIG ROAD
-                                           251/4 , INDORE
-                                           MADHYA PRADESH , 452001
+                                           23 ,Jameela Complex Madhavaram
+                                           High Road,Moolakadai, Chennai
+                                           Tamil Nadu , 600060
                                            <br />
                                            India
 

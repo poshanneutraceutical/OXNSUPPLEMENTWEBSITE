@@ -30,11 +30,12 @@ public class EmailService {
             String message) {
 
         try {
-
             SimpleMailMessage mail = new SimpleMailMessage();
 
             mail.setFrom(companyEmail);
             mail.setTo(companyEmail);
+            mail.setReplyTo(email);
+
             mail.setSubject("New Contact Inquiry");
 
             mail.setText(
@@ -49,9 +50,7 @@ public class EmailService {
             log.info("Contact inquiry email sent successfully.");
 
         } catch (Exception e) {
-
             log.error("Failed to send contact email.", e);
-
         }
     }
 
@@ -68,11 +67,12 @@ public class EmailService {
             String message) {
 
         try {
-
             SimpleMailMessage mail = new SimpleMailMessage();
 
             mail.setFrom(companyEmail);
             mail.setTo(companyEmail);
+            mail.setReplyTo(email);
+
             mail.setSubject("New Distributor Inquiry");
 
             mail.setText(
@@ -90,9 +90,7 @@ public class EmailService {
             log.info("Distributor inquiry email sent successfully.");
 
         } catch (Exception e) {
-
             log.error("Failed to send distributor inquiry email.", e);
-
         }
     }
 
@@ -104,6 +102,9 @@ public class EmailService {
 
         try {
 
+            /*
+             * Build product list
+             */
             StringBuilder products = new StringBuilder();
 
             for (OrderItem item : order.getItems()) {
@@ -115,27 +116,29 @@ public class EmailService {
                         .append("  -  ₹")
                         .append(item.getSubtotal())
                         .append("\n");
-
             }
 
-            // =========================================
-            // Customer Email
-            // =========================================
 
+            /*
+             * ==========================================================
+             * CUSTOMER ORDER CONFIRMATION
+             * ==========================================================
+             *
+             * This email goes to the customer.
+             */
             SimpleMailMessage customerMail = new SimpleMailMessage();
 
             customerMail.setFrom(companyEmail);
             customerMail.setTo(order.getEmail());
 
             customerMail.setSubject(
-                    "Ghost Strength - Order Confirmation #" + order.getId()
+                    "OXN Supplements - Order Confirmation #" + order.getId()
             );
 
             customerMail.setText(
-
                     "Hello " + order.getCustomerName() + ",\n\n" +
 
-                            "Thank you for shopping with Ghost Strength.\n\n" +
+                            "Thank you for shopping with OXN Supplements.\n\n" +
 
                             "Your order has been placed successfully.\n\n" +
 
@@ -163,59 +166,73 @@ public class EmailService {
                             order.getCity() + "\n" +
                             order.getState() + " - " + order.getPincode() +
 
-                            "\n\nWe will notify you once your order has been shipped.\n\n" +
+                            "\n\n" +
 
-                            "Thank you for choosing Ghost Strength.\n\n" +
+                            "We will notify you once your order has been shipped.\n\n" +
 
-                            "Team Ghost Strength"
+                            "Thank you for choosing OXN Supplements.\n\n" +
 
+                            "Team OXN Supplements"
             );
 
             mailSender.send(customerMail);
 
-            // =========================================
-            // Company Email
-            // =========================================
 
+            /*
+             * ==========================================================
+             * COMPANY ORDER NOTIFICATION
+             * ==========================================================
+             *
+             * This email goes to OXN Supplements.
+             *
+             * IMPORTANT:
+             * We keep the authenticated Gmail account as the From address.
+             * The customer's email is used as Reply-To.
+             *
+             * Therefore:
+             *
+             * From      : oxnsupplements@gmail.com
+             * To        : oxnsupplements@gmail.com
+             * Reply-To  : customer's email
+             *
+             * When you click Reply, Gmail will reply to the customer.
+             */
             SimpleMailMessage companyMail = new SimpleMailMessage();
 
             companyMail.setFrom(companyEmail);
             companyMail.setTo(companyEmail);
 
+            /*
+             * Customer's email goes into Reply-To.
+             */
+            companyMail.setReplyTo(order.getEmail());
+
             companyMail.setSubject(
-                    "New Order Received #" + order.getId()
+                    "New OXN Order Received #" + order.getId()
             );
 
             companyMail.setText(
-
                     "A new order has been placed.\n\n" +
 
                             "=====================================\n" +
-
                             "Customer Details\n" +
-
                             "=====================================\n\n" +
 
-                            "Customer : " + order.getCustomerName() +
+                            "Customer : " + order.getCustomerName() + "\n" +
+                            "Email : " + order.getEmail() + "\n" +
+                            "Phone : " + order.getPhone() + "\n\n" +
 
-                            "\nEmail : " + order.getEmail() +
-
-                            "\nPhone : " + order.getPhone() +
-
-                            "\n\nShipping Address:\n\n" +
+                            "Shipping Address:\n\n" +
 
                             order.getAddress() + "\n" +
-
                             order.getCity() + "\n" +
-
                             order.getState() + " - " +
-
                             order.getPincode() +
 
-                            "\n\n=====================================\n" +
+                            "\n\n" +
 
+                            "=====================================\n" +
                             "Products\n" +
-
                             "=====================================\n\n" +
 
                             products +
@@ -223,10 +240,10 @@ public class EmailService {
                             "\n-------------------------------------\n" +
 
                             "Total Amount : ₹" + order.getTotalAmount()
-
             );
 
             mailSender.send(companyMail);
+
 
             log.info(
                     "Order confirmation emails sent successfully for Order ID {}",
@@ -240,7 +257,6 @@ public class EmailService {
                     order.getId(),
                     e
             );
-
         }
     }
 }

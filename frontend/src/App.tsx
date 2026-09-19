@@ -156,10 +156,11 @@ function App() {
       ================================================= */}
 
       <a
-        href="#contact"
+        href="https://wa.me/918072081720?text=Hello%20OXN%20Supplements%2C%20I%20would%20like%20to%20know%20more%20about%20your%20products."
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Contact OXN"
+        aria-label="Chat with OXN Supplements on WhatsApp"
+        title="Chat with OXN Supplements on WhatsApp"
         className="
           fixed
           bottom-6

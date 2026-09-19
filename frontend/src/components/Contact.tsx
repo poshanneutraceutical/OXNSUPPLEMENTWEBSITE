@@ -146,7 +146,7 @@ export default function Contact() {
                   </h3>
 
                   <p className="text-gray-400">
-                    support@oxnsupplements.com
+                    oxnsupplements@gmail.com
                   </p>
 
                 </div>
@@ -171,7 +171,7 @@ export default function Contact() {
                   </h3>
 
                   <p className="text-gray-400">
-                    +91 00000 00000
+                    +91 8072081720
                   </p>
 
                 </div>
@@ -197,9 +197,9 @@ export default function Contact() {
 
                   <p className="text-gray-400 leading-7">
 
-                    NEHRU NAGAR MOG ROAD
-                     251/4 , INDORE ,
-                     MADHYA PRADESH
+                    23 ,Jameela Complex Madhavaram
+                    High Road,Moolakadai, Chennai
+                    Tamil Nadu , 600060
 
                   </p>
 
