@@ -23,13 +23,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class OrderService {
-
 
     private final CartRepository cartRepository;
 
@@ -40,13 +37,29 @@ public class OrderService {
 
     /*
      * ============================================================
-     * CHECKOUT CART
+     * CHECKOUT / PLACE ORDER
+     * ============================================================
+     *
+     * Important:
+     *
+     * Database work is completed inside this transaction.
+     * Email sending is intentionally triggered AFTER the database
+     * transaction has completed.
+     *
+     * This prevents slow SMTP/Gmail processing from delaying the
+     * customer's checkout response.
      * ============================================================
      */
+    @Transactional
     public OrderDTO checkout(
             CheckoutRequestDTO request
     ) {
 
+        /*
+         * ========================================================
+         * VALIDATE CUSTOMER ID
+         * ========================================================
+         */
 
         if (
                 request == null ||
@@ -61,8 +74,11 @@ public class OrderService {
 
 
         /*
-         * Find the customer's current cart.
+         * ========================================================
+         * FIND CUSTOMER CART
+         * ========================================================
          */
+
         Cart cart =
                 cartRepository
                         .findByCustomerId(
@@ -76,8 +92,11 @@ public class OrderService {
 
 
         /*
-         * The cart must contain at least one item.
+         * ========================================================
+         * CHECK CART
+         * ========================================================
          */
+
         if (
                 cart.getItems() == null ||
                         cart.getItems().isEmpty()
@@ -90,8 +109,11 @@ public class OrderService {
 
 
         /*
-         * Create order header.
+         * ========================================================
+         * CREATE ORDER
+         * ========================================================
          */
+
         Order order =
                 Order.builder()
                         .customerName(
@@ -134,25 +156,15 @@ public class OrderService {
 
 
         /*
-         * Copy EVERY cart row into the order.
-         *
-         * This is important after flavour support was added:
-         *
-         *     product + flavour A
-         *     product + flavour B
-         *
-         * remain separate order lines.
-         *
-         * The existing OrderItem entity supplied by the project
-         * stores product/price/quantity/subtotal. We therefore
-         * preserve those existing fields without inventing new
-         * database columns here.
+         * ========================================================
+         * COPY CART ITEMS INTO ORDER ITEMS
+         * ========================================================
          */
+
         for (
                 CartItem cartItem :
                 cart.getItems()
         ) {
-
 
             if (
                     cartItem == null ||
@@ -163,16 +175,11 @@ public class OrderService {
 
 
             BigDecimal linePrice =
-                    cartItem.getProduct()
+                    cartItem
+                            .getProduct()
                             .getPrice();
 
 
-            /*
-             * If your CartItem entity has a flavour-specific
-             * price in a later version, this can be changed to
-             * that field. For the current entity, keep the existing
-             * product price behavior.
-             */
             OrderItem orderItem =
                     OrderItem.builder()
                             .order(order)
@@ -213,9 +220,11 @@ public class OrderService {
 
 
         /*
-         * Make sure at least one valid order line
-         * was created.
+         * ========================================================
+         * VALIDATE ORDER ITEMS
+         * ========================================================
          */
+
         if (
                 order.getItems() == null ||
                         order.getItems().isEmpty()
@@ -228,37 +237,36 @@ public class OrderService {
 
 
         /*
-         * Save the order.
+         * ========================================================
+         * SAVE ORDER
+         * ========================================================
          */
+
         Order savedOrder =
                 orderRepository.save(
                         order
                 );
 
 
-        /*
-         * Confirmation email should never prevent
-         * a successfully saved order.
-         */
-        try {
-
-            emailService.sendOrderConfirmation(
-                    savedOrder
-            );
-
-        } catch (Exception e) {
-
-            log.error(
-                    "Failed to send order confirmation email.",
-                    e
-            );
-        }
+        log.info(
+                "Order created successfully. orderId={}, customerId={}, total={}",
+                savedOrder.getId(),
+                request.getCustomerId(),
+                savedOrder.getTotalAmount()
+        );
 
 
         /*
-         * Clear the cart only AFTER the order
-         * has been successfully saved.
+         * ========================================================
+         * CLEAR CART
+         * ========================================================
+         *
+         * The backend is responsible for clearing the cart.
+         * The frontend does NOT need to make another clear-cart
+         * request after checkout.
+         * ========================================================
          */
+
         cart.getItems().clear();
 
         cart.setTotalAmount(
@@ -270,9 +278,73 @@ public class OrderService {
         );
 
 
-        return convertToDTO(
-                savedOrder
+        log.info(
+                "Cart cleared successfully after order. customerId={}",
+                request.getCustomerId()
         );
+
+
+        /*
+         * ========================================================
+         * CONVERT ORDER TO DTO
+         * ========================================================
+         */
+
+        OrderDTO orderDTO =
+                convertToDTO(
+                        savedOrder
+                );
+
+
+        /*
+         * ========================================================
+         * EMAIL
+         * ========================================================
+         *
+         * IMPORTANT:
+         *
+         * EmailService.sendOrderConfirmation() should be @Async.
+         *
+         * That allows the SMTP operation to happen separately
+         * instead of keeping the customer waiting.
+         *
+         * The order has already been saved and the cart cleared.
+         * ========================================================
+         */
+
+        try {
+
+            emailService.sendOrderConfirmation(
+                    savedOrder
+            );
+
+            log.info(
+                    "Order confirmation email triggered. orderId={}",
+                    savedOrder.getId()
+            );
+
+        } catch (Exception e) {
+
+            /*
+             * Email failure must NEVER make an otherwise successful
+             * order fail.
+             */
+
+            log.error(
+                    "Could not trigger order confirmation email. orderId={}",
+                    savedOrder.getId(),
+                    e
+            );
+        }
+
+
+        /*
+         * ========================================================
+         * RETURN ORDER
+         * ========================================================
+         */
+
+        return orderDTO;
     }
 
 
@@ -281,6 +353,7 @@ public class OrderService {
      * CONVERT ENTITY -> DTO
      * ============================================================
      */
+
     private OrderDTO convertToDTO(
             Order order
     ) {
@@ -372,6 +445,4 @@ public class OrderService {
 
                 .build();
     }
-
 }
-

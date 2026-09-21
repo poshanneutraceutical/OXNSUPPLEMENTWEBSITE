@@ -319,17 +319,6 @@ export default function Checkout() {
           pincode:
             form.pincode.trim(),
         });
-
-      /*
-       * Clear backend cart
-       */
-
-      await clearCart();
-
-      /*
-       * Remove any old local cart
-       */
-
       localStorage.removeItem(
         "cart"
       );
