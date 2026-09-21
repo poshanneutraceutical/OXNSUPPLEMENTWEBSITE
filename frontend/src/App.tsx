@@ -17,7 +17,7 @@ import Footer from "./components/Footer";
 
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
-import VerifyPage from "./pages/VerifyPage";
+
 import OrderSuccess from "./pages/OrderSuccess";
 
 /* =========================================================
@@ -121,12 +121,7 @@ function App() {
           element={<Home />}
         />
 
-        {/* VERIFY PRODUCT */}
 
-        <Route
-          path="/verify-product"
-          element={<VerifyPage />}
-        />
 
         {/* CART */}
 
